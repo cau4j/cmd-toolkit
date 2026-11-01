@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>CMD Toolkit · Limpeza e manutenção do Windows</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;800&family=JetBrains+Mono:wght@400;500&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#F2F5F9;--surface:#FFFFFF;--ink:#0F1D2E;--muted:#55667A;--line:#DCE3EC;
+  --accent:#2563EB;--accent-ink:#FFFFFF;--term:#0F1D2E;--termink:#D7E3F4;--prompt:#5EC8B6;
+  --warn-bg:#FFF3E0;--warn-ink:#8A4B00;--warn-line:#F0C27A;--note-bg:#EAF1FF;
+  color-scheme:light;
+  box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0C141F;--surface:#131E2C;--ink:#E8EEF6;--muted:#93A4B8;--line:#22324A;
+    --accent:#6B9BFF;--accent-ink:#0C141F;--term:#08101A;--warn-bg:#2B2112;--warn-ink:#F2C879;--warn-line:#5A4420;--note-bg:#15233A;
+    color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0C141F;--surface:#131E2C;--ink:#E8EEF6;--muted:#93A4B8;--line:#22324A;
+  --accent:#6B9BFF;--accent-ink:#0C141F;--term:#08101A;--warn-bg:#2B2112;--warn-ink:#F2C879;--warn-line:#5A4420;--note-bg:#15233A;
+  color-scheme:dark;
+}
+html{scroll-padding-top:calc(env(safe-area-inset-top,0px) + 76px);scroll-behavior:smooth}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 16px/1.6 Inter,system-ui,-apple-system,"Segoe UI",sans-serif}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);background:var(--bg);z-index:10}
+.wrap{max-width:860px;margin:0 auto;padding:0 20px}
+h1,h2{font-family:"Bricolage Grotesque",Inter,system-ui,sans-serif;margin:0;letter-spacing:-.02em;line-height:1.05}
+.hero{padding:56px 0 28px}
+.pill{display:inline-block;font-size:13px;font-weight:500;color:var(--muted);border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:3px 12px;margin:0 6px 8px 0}
+h1{font-size:clamp(38px,8vw,68px);font-weight:800;margin:14px 0 16px}
+.lead{max-width:56ch;color:var(--muted);font-size:18px;margin:0 0 28px}
+.term{background:var(--term);color:var(--termink);border-radius:14px;padding:16px 18px;font:400 15px/1.7 "JetBrains Mono",ui-monospace,Consolas,monospace;overflow-x:auto;max-width:520px}
+.term .p{color:var(--prompt)}
+.cur{display:inline-block;width:9px;height:17px;background:var(--termink);vertical-align:-3px;margin-left:2px;animation:blink 1.1s steps(2,start) infinite}
+@keyframes blink{to{visibility:hidden}}
+.before{margin:28px 0 8px;background:var(--note-bg);border:1px solid var(--line);border-radius:14px;padding:18px 20px}
+.before h2{font-size:20px;margin-bottom:8px}
+.before ul{margin:0;padding-left:20px;color:var(--muted)}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--bg);padding:12px 0;border-bottom:1px solid var(--line);margin-top:20px}
+.bar .wrap{display:grid;gap:10px}
+.search{width:100%;font:inherit;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:11px 14px}
+.search:focus-visible,.chip:focus-visible,.copy:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.chips{display:flex;gap:8px;overflow-x:auto;padding-bottom:2px}
+.chip{flex:none;font:500 14px Inter,sans-serif;color:var(--ink);background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:6px 14px;cursor:pointer}
+.chip:hover{border-color:var(--accent)}
+section{padding-top:44px}
+section h2{font-size:clamp(26px,5vw,36px);font-weight:800}
+.goal{color:var(--muted);margin:8px 0 20px;max-width:60ch}
+.note{background:var(--note-bg);border-left:4px solid var(--accent);border-radius:8px;padding:10px 14px;margin:0 0 16px;font-size:15px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:14px;margin-bottom:14px;overflow:hidden}
+.card-h{display:flex;gap:12px;align-items:baseline;padding:14px 18px 10px}
+.num{font:500 14px "JetBrains Mono",monospace;color:var(--accent);min-width:2ch}
+.card-h h3{margin:0;font-size:17px;font-weight:600;line-height:1.35}
+.code{position:relative;background:var(--term);color:var(--termink);display:flex;align-items:center;gap:10px;padding:12px 14px 12px 18px}
+.code code{flex:1;font:400 14.5px/1.5 "JetBrains Mono",ui-monospace,Consolas,monospace;overflow-x:auto;white-space:pre;scrollbar-width:thin}
+.code code::before{content:"> ";color:var(--prompt)}
+.copy{flex:none;font:500 13px Inter,sans-serif;color:var(--accent-ink);background:var(--accent);border:0;border-radius:8px;padding:6px 12px;cursor:pointer;min-width:74px}
+.copy.ok{background:var(--prompt);color:#08101A}
+.desc{margin:0;padding:12px 18px 16px;color:var(--muted);font-size:15px}
+.warn{margin:0 18px 16px;background:var(--warn-bg);color:var(--warn-ink);border:1px solid var(--warn-line);border-radius:10px;padding:8px 12px;font-size:14px}
+.empty{display:none;text-align:center;color:var(--muted);padding:60px 0}
+footer{padding:56px 0 48px;color:var(--muted);font-size:14px}
+@media (prefers-reduced-motion:reduce){.cur{animation:none}html{scroll-behavior:auto}}
+@media (max-width:520px){.copy{min-width:64px;padding:6px 10px}}
+</style>
+</head>
+<body>
+<header class="wrap hero">
+  <span class="pill">Windows 10 e 11</span><span class="pill" id="count"></span><span class="pill">Guia de referência</span>
+  <h1>Limpeza e manutenção do Windows</h1>
+  <p class="lead">Uma coleção organizada de comandos para limpar arquivos temporários, liberar espaço, limpar caches, corrigir problemas e fazer manutenção no computador.</p>
+  <div class="term" aria-hidden="true"><span class="p">C:\&gt;</span> sfc /scannow<br>Verificando integridade do sistema…<span class="cur"></span></div>
+  <div class="before">
+    <h2>Antes de começar</h2>
+    <ul>
+      <li>Abra o CMD como administrador quando necessário.</li>
+      <li>Feche programas que estiver usando.</li>
+      <li>Salve seus arquivos importantes.</li>
+      <li>Não execute comandos que não entenda.</li>
+      <li>Alguns comandos podem exigir reinicialização.</li>
+    </ul>
+  </div>
+</header>
+
+<div class="bar">
+  <div class="wrap">
+    <input class="search" id="q" type="search" placeholder="Buscar comando ou assunto (ex.: dns, disco, temp)" aria-label="Buscar comandos">
+    <div class="chips" id="chips"></div>
+  </div>
+</div>
+
+<main class="wrap" id="main">
+  <p class="empty" id="empty">Nenhum comando encontrado. Tente outra palavra.</p>
+</main>
+
+<footer class="wrap">Use por sua conta e risco: leia o que cada comando faz antes de executar.</footer>
+
+<script>
+var DATA = String.raw`# Limpeza de arquivos temporários|Remover arquivos temporários e liberar espaço no armazenamento.
+del /q /f /s "%TEMP%\*"|Limpar arquivos temporários do usuário|Tenta excluir arquivos da pasta temporária do usuário. Arquivos em uso ou bloqueados podem permanecer.
+explorer %TEMP%|Abrir a pasta TEMP|Abre a pasta de arquivos temporários do usuário para inspeção e limpeza manual.
+del /q /f /s "C:\Windows\Temp\*"|Limpar temporários do Windows|Tenta excluir arquivos temporários do sistema que não estejam em uso. Requer permissões administrativas.
+explorer C:\Windows\Temp|Abrir a pasta de temporários do Windows|Abre a pasta de arquivos temporários do sistema.
+cleanmgr|Abrir a Limpeza de Disco|Abre a ferramenta nativa do Windows para selecionar e remover arquivos desnecessários.
+cleanmgr /sageset:1|Configurar a Limpeza de Disco|Permite selecionar as categorias de arquivos que deseja limpar.
+cleanmgr /sagerun:1|Executar a limpeza configurada|Executa a limpeza utilizando as opções escolhidas anteriormente.
+PowerShell -NoProfile -Command "Clear-RecycleBin -Force"|Esvaziar a Lixeira|Esvazia a Lixeira do Windows.|Os arquivos removidos deixam de estar disponíveis para recuperação pela Lixeira.
+# Limpeza de cache e rede|Limpar informações temporárias de rede e corrigir problemas de conexão.
+ipconfig /flushdns|Limpar cache DNS|Limpa os registros DNS armazenados localmente pelo Windows.
+ipconfig /release|Liberar endereço IP|Libera o endereço IP atual obtido por DHCP.|A conexão pode cair temporariamente.
+ipconfig /renew|Renovar endereço IP|Solicita um novo endereço IP ao servidor DHCP.
+netsh winsock reset|Redefinir Winsock|Redefine o catálogo Winsock, podendo corrigir problemas de comunicação de rede.
+netsh int ip reset|Redefinir configurações TCP/IP|Restaura configurações da pilha TCP/IP do Windows.
+# Manutenção e reparo do Windows|Verificar e reparar arquivos e componentes do sistema operacional.
+sfc /scannow|Verificar integridade dos arquivos do sistema|Verifica arquivos protegidos do Windows e tenta reparar arquivos corrompidos.
+DISM /Online /Cleanup-Image /RestoreHealth|Reparar imagem do Windows|Verifica e repara a imagem de componentes do Windows, utilizada também pelo SFC.
+DISM /Online /Cleanup-Image /AnalyzeComponentStore|Analisar armazenamento de componentes|Analisa o armazenamento de componentes do Windows e verifica se a limpeza é recomendada.
+DISM /Online /Cleanup-Image /StartComponentCleanup|Limpar componentes antigos|Remove versões antigas de componentes substituídos, ajudando a liberar espaço.
+# Verificação e otimização do disco|Verificar erros, analisar a unidade e otimizar o armazenamento.
+chkdsk C: /scan|Verificar erros no disco|Verifica o sistema de arquivos da unidade C: em busca de erros.
+defrag C: /A|Analisar fragmentação|Analisa a fragmentação da unidade sem executar a otimização.
+defrag C: /O|Otimizar unidade|Executa a otimização adequada ao tipo de unidade, incluindo TRIM em SSDs compatíveis.
+fsutil volume diskfree C:|Verificar espaço disponível|Mostra informações sobre o espaço total e disponível na unidade C:.
+# Limpeza de cache de aplicativos|Corrigir problemas de aplicativos e acessar ferramentas de armazenamento.
+wsreset.exe|Limpar cache da Microsoft Store|Redefine o cache da Microsoft Store. Pode ajudar a resolver problemas de funcionamento da loja.
+start ms-settings:storage|Abrir configurações de armazenamento|Abre as configurações de armazenamento do Windows.
+start ms-settings:storagesense|Abrir Sensor de Armazenamento|Abre as configurações do Sensor de Armazenamento, que pode automatizar a limpeza de arquivos desnecessários.
+# Comandos extras de diagnóstico|Identificar problemas e consultar informações do computador.
+systeminfo|Informações do sistema|Exibe informações sobre o Windows, memória, processador, inicialização e outros detalhes.
+taskmgr|Abrir Gerenciador de Tarefas|Permite visualizar processos, consumo de CPU, memória, disco e programas de inicialização.
+resmon|Abrir Monitor de Recursos|Apresenta informações detalhadas sobre o uso de processador, memória, disco e rede.
+perfmon /rel|Abrir Monitor de Confiabilidade|Mostra o histórico de falhas, erros e problemas de estabilidade do Windows.
+eventvwr|Abrir Visualizador de Eventos|Permite consultar registros de erros, avisos e eventos do sistema.
+# Comandos opcionais|Realizar ajustes específicos no armazenamento e em recursos do Windows.
+powercfg /h off|Desativar hibernação|Desativa a hibernação e remove o arquivo de hibernação, podendo liberar bastante espaço em disco.|Atenção: também pode desativar a Inicialização Rápida. Não utilize se precisar desses recursos.
+powercfg /list|Consultar configurações de energia|Exibe os planos de energia disponíveis no computador.
+explorer C:\Windows\Prefetch|Abrir pasta Prefetch|Abre a pasta de dados de pré-carregamento de aplicativos.|Não é recomendado apagar seu conteúdo rotineiramente.`;
+
+var NOTES = {"Manutenção e reparo do Windows":"Ordem recomendada para reparo: execute primeiro o comando 15 e depois o 14."};
+var main = document.getElementById("main"), chips = document.getElementById("chips");
+var cards = [], sections = [], n = 0, cur = null;
+
+function el(tag, cls, text){ var e = document.createElement(tag); if (cls) e.className = cls; if (text) e.textContent = text; return e; }
+
+function copyText(text, btn){
+  function done(){ btn.textContent = "Copiado"; btn.classList.add("ok"); setTimeout(function(){ btn.textContent = "Copiar"; btn.classList.remove("ok"); }, 1600); }
+  try {
+    if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(done, fallback); return; }
+  } catch (e) {}
+  fallback();
+  function fallback(){
+    var t = document.createElement("textarea"); t.value = text; t.style.position = "fixed"; t.style.opacity = "0";
+    document.body.appendChild(t); t.select();
+    try { document.execCommand("copy"); done(); } catch (e) {}
+    document.body.removeChild(t);
+  }
+}
+
+DATA.split("\n").forEach(function(line){
+  if (line.charAt(0) === "#") {
+    var p = line.slice(2).split("|");
+    var s = el("section"); s.id = "s" + sections.length;
+    s.appendChild(el("h2", "", p[0])); s.appendChild(el("p", "goal", "Objetivo: " + p[1]));
+    if (NOTES[p[0]]) s.appendChild(el("p", "note", NOTES[p[0]]));
+    main.insertBefore(s, document.getElementById("empty"));
+    var c = el("button", "chip", p[0]); c.type = "button";
+    (function(id){ c.onclick = function(){ document.getElementById(id).scrollIntoView(); }; })(s.id);
+    chips.appendChild(c);
+    cur = { el: s, cards: [] }; sections.push(cur);
+    return;
+  }
+  var f = line.split("|"); n++;
+  var card = el("article", "card");
+  var h = el("div", "card-h"); h.appendChild(el("span", "num", String(n))); h.appendChild(el("h3", "", f[1])); card.appendChild(h);
+  var code = el("div", "code"); code.appendChild(el("code", "", f[0]));
+  var b = el("button", "copy", "Copiar"); b.type = "button"; b.setAttribute("aria-label", "Copiar comando " + n);
+  b.onclick = function(){ copyText(f[0], b); }; code.appendChild(b); card.appendChild(code);
+  card.appendChild(el("p", "desc", "O que faz: " + f[2]));
+  if (f[3]) card.appendChild(el("p", "warn", f[3]));
+  cur.el.appendChild(card);
+  var rec = { el: card, text: (f[0] + " " + f[1] + " " + f[2] + " " + (f[3] || "")).toLowerCase() };
+  cur.cards.push(rec); cards.push(rec);
+});
+document.getElementById("count").textContent = n + " comandos";
+
+document.getElementById("q").addEventListener("input", function(e){
+  var q = e.target.value.trim().toLowerCase(), any = false;
+  sections.forEach(function(s){
+    var vis = 0;
+    s.cards.forEach(function(c){ var m = !q || c.text.indexOf(q) > -1; c.el.style.display = m ? "" : "none"; if (m) vis++; });
+    s.el.style.display = vis ? "" : "none"; if (vis) any = true;
+  });
+  document.getElementById("empty").style.display = any ? "none" : "block";
+});
+</script>
+</body>
+</html>
